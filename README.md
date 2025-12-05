@@ -41,3 +41,15 @@ On successful apply, Terraform displays:
 - `deploy_id` - Unique 2-char suffix for resource naming
 - `aws_account_id` - Confirms AWS connectivity
 - `naming_example` - Resource naming convention (e.g., `dbaws-resource-a3`)
+
+## Cleanup
+
+```bash
+# Destroy infrastructure
+cd terraform
+terraform destroy
+
+# Remove generated files
+cd ..
+python manage.py clean
+```

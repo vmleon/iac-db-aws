@@ -3,6 +3,8 @@
 manage.py - Setup and Terraform configuration manager for dbaws POC
 """
 
+import json
+import shutil
 import sys
 from pathlib import Path
 
@@ -68,6 +70,48 @@ def cmd_tf():
     print('  terraform apply "tfplan"')
 
 
+def cmd_clean():
+    """Clean generated files after terraform destroy"""
+    tfstate_path = TERRAFORM_DIR / "terraform.tfstate"
+
+    # Check if terraform state has resources
+    if tfstate_path.exists():
+        state = json.loads(tfstate_path.read_text())
+        resources = state.get("resources", [])
+        if resources:
+            print("Error: Terraform state has active resources.")
+            print("Run 'cd terraform && terraform destroy' first.")
+            sys.exit(1)
+
+    # Files/dirs to clean
+    targets = [
+        ROOT_DIR / ".env",
+        TERRAFORM_DIR / "terraform.tfvars",
+        TERRAFORM_DIR / "tfplan",
+        TERRAFORM_DIR / ".terraform",
+        TERRAFORM_DIR / ".terraform.lock.hcl",
+    ]
+
+    # Add tfstate files
+    targets.extend(TERRAFORM_DIR.glob("*.tfstate*"))
+
+    deleted = []
+    for target in targets:
+        if target.exists():
+            if target.is_dir():
+                shutil.rmtree(target)
+            else:
+                target.unlink()
+            deleted.append(target)
+
+    if deleted:
+        print("Cleaned:")
+        for f in deleted:
+            print(f"  {f}")
+    else:
+        print("Nothing to clean.")
+
+
 def prompt(name: str, default: str = None, secret: bool = False) -> str:
     """Prompt user for input"""
     if default:
@@ -90,6 +134,7 @@ def main():
         print("\nCommands:")
         print("  setup  - Create .env from template (interactive)")
         print("  tf     - Generate terraform.tfvars from .env")
+        print("  clean  - Remove generated files (requires terraform destroy first)")
         sys.exit(1)
 
     command = sys.argv[1]
@@ -98,6 +143,8 @@ def main():
         cmd_setup()
     elif command == "tf":
         cmd_tf()
+    elif command == "clean":
+        cmd_clean()
     else:
         print(f"Unknown command: {command}")
         sys.exit(1)
