@@ -1,0 +1,36 @@
+# Environment files (contain secrets)
+.env
+!.env.j2
+
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/.terraform.lock.hcl
+terraform/terraform.tfvars
+!terraform/terraform.tfvars.j2
+
+# Ansible
+ansible/inventory/*.yml
+ansible/inventory/*.yaml
+!ansible/inventory/*.example.yml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+*.egg-info/
+
+# IDE
+.idea/
+.vscode/
+CLAUDE.md
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
