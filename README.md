@@ -14,13 +14,19 @@ Terraform and Ansible POC for deploying Oracle Database @ AWS.
 # Create virtual environment
 python3 -m venv venv
 source venv/bin/activate
+```
 
+```bash
 # Install dependencies
 pip install -r requirements.txt
+```
 
+```bash
 # Configure environment (interactive)
 python manage.py setup
+```
 
+```bash
 # Generate terraform.tfvars
 python manage.py tf
 ```
@@ -32,6 +38,7 @@ cd terraform
 terraform init
 terraform plan -out tfplan
 terraform apply "tfplan"
+cd ..
 ```
 
 ## Outputs
@@ -48,7 +55,9 @@ On successful apply, Terraform displays:
 # Destroy infrastructure
 cd terraform
 terraform destroy
+```
 
+```bash
 # Remove generated files
 cd ..
 python manage.py clean
