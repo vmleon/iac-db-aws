@@ -64,8 +64,8 @@ def cmd_tf():
     print("\nNext steps:")
     print("  cd terraform")
     print("  terraform init")
-    print("  terraform plan")
-    print("  terraform apply")
+    print("  terraform plan -out tfplan")
+    print('  terraform apply "tfplan"')
 
 
 def prompt(name: str, default: str = None, secret: bool = False) -> str:

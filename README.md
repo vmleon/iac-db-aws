@@ -30,13 +30,14 @@ python manage.py tf
 ```bash
 cd terraform
 terraform init
-terraform plan
-terraform apply
+terraform plan -out tfplan
+terraform apply "tfplan"
 ```
 
 ## Outputs
 
 On successful apply, Terraform displays:
+
 - `deploy_id` - Unique 2-char suffix for resource naming
 - `aws_account_id` - Confirms AWS connectivity
 - `naming_example` - Resource naming convention (e.g., `dbaws-resource-a3`)
