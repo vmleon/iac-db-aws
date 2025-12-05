@@ -55,10 +55,10 @@ On successful apply, Terraform displays:
 # Destroy infrastructure
 cd terraform
 terraform destroy
+cd ..
 ```
 
 ```bash
 # Remove generated files
-cd ..
 python manage.py clean
 ```
