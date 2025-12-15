@@ -1,14 +1,15 @@
 # Environment files (contain secrets)
 .env
+.env.bkp
 !.env.j2
 
 # Terraform
-terraform/.terraform/
-terraform/*.tfstate
-terraform/*.tfstate.*
-terraform/.terraform.lock.hcl
-terraform/terraform.tfvars
-terraform/tfplan
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+terraform.tfvars
+tfplan
 !terraform/terraform.tfvars.j2
 
 # Ansible

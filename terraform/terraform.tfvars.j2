@@ -7,7 +7,14 @@ aws_secret_access_key = "{{ AWS_SECRET_ACCESS_KEY }}"
 aws_session_token     = "{{ AWS_SESSION_TOKEN }}"
 
 # AWS Configuration
-aws_region = "{{ AWS_REGION }}"
+aws_region        = "{{ AWS_REGION }}"
+availability_zone = "{{ AVAILABILITY_ZONE }}"
 
 # Project Configuration
 project_prefix = "{{ PROJECT_PREFIX }}"
+
+# ODB Configuration
+contact_email      = "{{ CONTACT_EMAIL }}"
+ssh_public_key     = "{{ SSH_PUBLIC_KEY }}"
+deploy_vm_cluster  = {{ DEPLOY_VM_CLUSTER | lower }}
+deploy_autonomous  = {{ DEPLOY_AUTONOMOUS | lower }}

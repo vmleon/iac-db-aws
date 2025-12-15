@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """
 manage.py - Setup and Terraform configuration manager for dbaws POC
+
+Phase 2: Extends setup with ODB configuration and SSH key generation
 """
 
 import json
+import re
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -14,6 +18,67 @@ from jinja2 import Template
 
 ROOT_DIR = Path(__file__).parent
 TERRAFORM_DIR = ROOT_DIR / "terraform"
+SSH_KEY_NAME = "dbaws_key"
+
+
+def ensure_ssh_key() -> str:
+    """
+    Ensure SSH keypair exists for VM Cluster access.
+    Auto-generates ed25519 keypair if not found.
+
+    POC Note: Auto-generates keys. Production: Use existing keys from
+    secrets manager or HSM.
+
+    Returns:
+        str: SSH public key content
+    """
+    ssh_dir = Path.home() / ".ssh"
+    key_path = ssh_dir / SSH_KEY_NAME
+    pub_key_path = key_path.with_suffix(".pub")
+
+    if pub_key_path.exists():
+        print(f"Using existing SSH key: {pub_key_path}")
+        return pub_key_path.read_text().strip()
+
+    print(f"Generating SSH keypair at: {key_path}")
+    ssh_dir.mkdir(exist_ok=True, mode=0o700)
+
+    try:
+        subprocess.run(
+            [
+                "ssh-keygen",
+                "-t", "ed25519",
+                "-f", str(key_path),
+                "-N", "",  # No passphrase for POC
+                "-C", "dbaws-terraform",
+            ],
+            check=True,
+            capture_output=True,
+        )
+        print(f"SSH keypair generated: {key_path}")
+        return pub_key_path.read_text().strip()
+    except subprocess.CalledProcessError as e:
+        print(f"Error generating SSH key: {e}")
+        sys.exit(1)
+    except FileNotFoundError:
+        print("Error: ssh-keygen not found. Please install OpenSSH.")
+        sys.exit(1)
+
+
+def validate_email(email: str) -> bool:
+    """Validate email format"""
+    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+    return bool(re.match(pattern, email))
+
+
+def prompt_bool(name: str, default: bool = True) -> bool:
+    """Prompt for yes/no input"""
+    default_str = "Y/n" if default else "y/N"
+    value = input(f"{name} [{default_str}]: ").strip().lower()
+
+    if not value:
+        return default
+    return value in ("y", "yes", "true", "1")
 
 
 def cmd_setup():
@@ -25,14 +90,58 @@ def cmd_setup():
         print(f"Error: Template not found: {template_path}")
         sys.exit(1)
 
-    print("=== dbaws Environment Setup ===\n")
+    print("=" * 50)
+    print("  dbaws Environment Setup - Phase 2")
+    print("=" * 50)
+
+    # AWS Credentials
+    print("\n--- AWS Credentials ---")
+    aws_access_key_id = prompt("AWS_ACCESS_KEY_ID")
+    aws_secret_access_key = prompt("AWS_SECRET_ACCESS_KEY", secret=True)
+    aws_session_token = prompt("AWS_SESSION_TOKEN", secret=True)
+
+    # AWS Configuration
+    print("\n--- AWS Configuration ---")
+    aws_region = prompt("AWS_REGION", default="us-west-2")
+
+    # Derive default AZ from region
+    default_az = f"{aws_region}a"
+    availability_zone = prompt("AVAILABILITY_ZONE", default=default_az)
+
+    # Project Configuration
+    print("\n--- Project Configuration ---")
+    project_prefix = prompt("PROJECT_PREFIX", default="dbaws")
+
+    # ODB Configuration
+    print("\n--- Oracle Database Configuration ---")
+
+    # Contact email (required by OCI)
+    while True:
+        contact_email = prompt("CONTACT_EMAIL (for OCI notifications)")
+        if validate_email(contact_email):
+            break
+        print("Invalid email format. Please try again.")
+
+    # SSH Key
+    print("\n--- SSH Key Configuration ---")
+    ssh_public_key = ensure_ssh_key()
+
+    # Deployment toggles
+    print("\n--- Deployment Options ---")
+    deploy_vm_cluster = prompt_bool("Deploy VM Cluster?", default=True)
+    deploy_autonomous = prompt_bool("Deploy Autonomous VM Cluster?", default=True)
 
     values = {
-        "aws_access_key_id": prompt("AWS_ACCESS_KEY_ID"),
-        "aws_secret_access_key": prompt("AWS_SECRET_ACCESS_KEY", secret=True),
-        "aws_session_token": prompt("AWS_SESSION_TOKEN", secret=True),
-        "aws_region": prompt("AWS_REGION", default="us-east-1"),
-        "project_prefix": prompt("PROJECT_PREFIX", default="dbaws"),
+        "aws_access_key_id": aws_access_key_id,
+        "aws_secret_access_key": aws_secret_access_key,
+        "aws_session_token": aws_session_token,
+        "aws_region": aws_region,
+        "availability_zone": availability_zone,
+        "project_prefix": project_prefix,
+        "contact_email": contact_email,
+        "ssh_public_key": ssh_public_key,
+        "deploy_vm_cluster": str(deploy_vm_cluster),
+        "deploy_autonomous": str(deploy_autonomous),
     }
 
     template = Template(template_path.read_text())
@@ -40,6 +149,7 @@ def cmd_setup():
     output_path.write_text(output)
 
     print(f"\n.env created at: {output_path}")
+    print("\nNext: Run 'python manage.py tf' to generate terraform.tfvars")
 
 
 def cmd_tf():
@@ -49,7 +159,7 @@ def cmd_tf():
     output_path = TERRAFORM_DIR / "terraform.tfvars"
 
     if not env_path.exists():
-        print(f"Error: .env not found. Run 'python manage.py setup' first.")
+        print("Error: .env not found. Run 'python manage.py setup' first.")
         sys.exit(1)
 
     if not template_path.exists():
@@ -68,6 +178,7 @@ def cmd_tf():
     print("  terraform init")
     print("  terraform plan -out tfplan")
     print('  terraform apply "tfplan"')
+    print("\nNote: Exadata Infrastructure provisioning takes ~4-8 hours.")
 
 
 def cmd_clean():
@@ -110,6 +221,12 @@ def cmd_clean():
             print(f"  {f}")
     else:
         print("Nothing to clean.")
+
+    # Note about SSH key
+    ssh_key_path = Path.home() / ".ssh" / SSH_KEY_NAME
+    if ssh_key_path.exists():
+        print(f"\nNote: SSH keypair at ~/.ssh/{SSH_KEY_NAME} was NOT deleted.")
+        print("Delete manually if no longer needed.")
 
 
 def prompt(name: str, default: str = None, secret: bool = False) -> str:
