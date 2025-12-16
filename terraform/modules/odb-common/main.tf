@@ -21,11 +21,11 @@ data "aws_availability_zone" "selected" {
 }
 
 # =============================================================================
-# Sample VPC for Peering Demo
+# Application VPC for Peering Demo
 # POC: Creates a simple VPC. Production: Use existing VPCs
 # =============================================================================
 
-resource "aws_vpc" "sample" {
+resource "aws_vpc" "application" {
   cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
   enable_dns_support   = true
@@ -36,7 +36,7 @@ resource "aws_vpc" "sample" {
 }
 
 resource "aws_subnet" "app" {
-  vpc_id                  = aws_vpc.sample.id
+  vpc_id                  = aws_vpc.application.id
   cidr_block              = var.app_subnet_cidr
   availability_zone       = var.availability_zone
   map_public_ip_on_launch = false
@@ -46,20 +46,20 @@ resource "aws_subnet" "app" {
   })
 }
 
-resource "aws_internet_gateway" "sample" {
-  vpc_id = aws_vpc.sample.id
+resource "aws_internet_gateway" "application" {
+  vpc_id = aws_vpc.application.id
 
   tags = merge(local.default_tags, {
     Name = "${local.resource_name}-igw"
   })
 }
 
-resource "aws_route_table" "sample" {
-  vpc_id = aws_vpc.sample.id
+resource "aws_route_table" "application" {
+  vpc_id = aws_vpc.application.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.sample.id
+    gateway_id = aws_internet_gateway.application.id
   }
 
   tags = merge(local.default_tags, {
@@ -69,7 +69,7 @@ resource "aws_route_table" "sample" {
 
 resource "aws_route_table_association" "app" {
   subnet_id      = aws_subnet.app.id
-  route_table_id = aws_route_table.sample.id
+  route_table_id = aws_route_table.application.id
 }
 
 # =============================================================================
@@ -84,6 +84,7 @@ resource "aws_odb_network" "this" {
   backup_subnet_cidr   = var.backup_subnet_cidr
   s3_access            = var.s3_access
   zero_etl_access      = var.zero_etl_access
+  region               = var.aws_region
 
   tags = merge(local.default_tags, {
     Name = "${local.resource_name}-odb-network"
@@ -104,10 +105,11 @@ resource "aws_odb_cloud_exadata_infrastructure" "this" {
   availability_zone_id = data.aws_availability_zone.selected.zone_id
   database_server_type = var.database_server_type
   storage_server_type  = var.storage_server_type
+  region               = var.aws_region
 
-  customer_contacts_to_send_to_oci {
-    email = var.contact_email
-  }
+  customer_contacts_to_send_to_oci = [
+    { email = var.contact_email }
+  ]
 
   maintenance_window {
     preference                       = "NO_PREFERENCE"
@@ -134,18 +136,19 @@ data "aws_odb_db_servers" "this" {
 
 # =============================================================================
 # ODB Network Peering Connection
-# POC: Peers with sample VPC. Production: Peer with existing application VPCs
+# POC: Peers with application VPC. Production: Peer with existing VPCs
 # =============================================================================
 
 resource "aws_odb_network_peering_connection" "this" {
   depends_on = [
     aws_odb_network.this,
-    aws_vpc.sample
+    aws_vpc.application
   ]
 
   display_name    = "${local.resource_name}-peering"
   odb_network_id  = aws_odb_network.this.id
-  peer_network_id = aws_vpc.sample.id
+  peer_network_id = aws_vpc.application.id
+  region          = var.aws_region
 
   tags = merge(local.default_tags, {
     Name = "${local.resource_name}-peering"

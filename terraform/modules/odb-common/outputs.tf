@@ -94,19 +94,19 @@ output "peering_connection_arn" {
   value       = aws_odb_network_peering_connection.this.arn
 }
 
-# Sample VPC outputs
+# Application VPC outputs
 output "vpc_id" {
-  description = "ID of the sample VPC (for application deployment)"
-  value       = aws_vpc.sample.id
+  description = "ID of the application VPC"
+  value       = aws_vpc.application.id
 }
 
 output "vpc_cidr" {
-  description = "CIDR of the sample VPC"
-  value       = aws_vpc.sample.cidr_block
+  description = "CIDR of the application VPC"
+  value       = aws_vpc.application.cidr_block
 }
 
 output "app_subnet_id" {
-  description = "ID of the application subnet in sample VPC"
+  description = "ID of the application subnet"
   value       = aws_subnet.app.id
 }
 

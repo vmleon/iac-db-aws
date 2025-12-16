@@ -38,9 +38,9 @@ variable "aws_region" {
 }
 
 variable "availability_zone" {
-  description = "Availability zone. Examples: us-west-2a, us-east-1a, eu-west-1a"
+  description = "Availability zone for deployment"
   type        = string
-  default     = "us-west-2a"
+  default     = "us-west-2d"
 }
 
 # =============================================================================
