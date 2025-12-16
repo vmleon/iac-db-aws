@@ -50,7 +50,9 @@ terraform/modules/
 # Create virtual environment
 python3 -m venv venv
 source venv/bin/activate
+```
 
+```bash
 # Install dependencies
 pip install -r requirements.txt
 ```
@@ -60,19 +62,31 @@ pip install -r requirements.txt
 ```bash
 # Activate virtual environment
 source venv/bin/activate
+```
 
+```bash
 # Configure environment (interactive)
 # Prompts for: AWS credentials, region, AZ, contact email
 # Auto-generates SSH keypair at ~/.ssh/dbaws_key
 python manage.py setup
+```
 
+```bash
 # Generate terraform.tfvars
 python manage.py tf
+```
 
+```bash
 # Deploy infrastructure
 cd terraform
 terraform init
+```
+
+```bash
 terraform plan -out tfplan
+```
+
+```bash
 terraform apply "tfplan"
 ```
 
