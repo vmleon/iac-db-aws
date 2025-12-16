@@ -1,7 +1,8 @@
-# TODO list
+# TODO list
 
-- Split modules into separate stacks for Terraform: common, vm-cluster, autonomous-cluster
-- Create an Ops EC2 instance for running ansible, and SQLcl
-- Implement Ansible for vm-cluster and autonomous
-- Combine current AWS provider with OCI Provider
-- Data Guard between two VM Clusters (simulating cross-az/cross-region replication setup)
+- Use S3 backend with DynamoDB locking for remote state storage and concurrent access protection
+- Split into separate Terraform stacks (common, vm-cluster, autonomous) with independent state files
+- Create an Ops EC2 bastion instance for running Ansible playbooks and SQLcl commands
+- Implement Ansible playbooks for VM Cluster and Autonomous database configuration
+- Add OCI Provider alongside AWS for managing OCI-native resources (wallets, backups, Data Guard)
+- Configure Data Guard between two VM Clusters for cross-region replication
