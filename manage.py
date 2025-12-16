@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """
 manage.py - Setup and Terraform configuration manager for dbaws POC
-
-Phase 2: Extends setup with ODB configuration and SSH key generation
 """
 
 import json
@@ -91,7 +89,7 @@ def cmd_setup():
         sys.exit(1)
 
     print("=" * 50)
-    print("  dbaws Environment Setup - Phase 2")
+    print("  dbaws Environment Setup")
     print("=" * 50)
 
     # AWS Credentials
@@ -105,7 +103,7 @@ def cmd_setup():
     aws_region = prompt("AWS_REGION", default="us-west-2")
 
     # Derive default AZ from region
-    default_az = f"{aws_region}a"
+    default_az = f"{aws_region}d"
     availability_zone = prompt("AVAILABILITY_ZONE", default=default_az)
 
     # Project Configuration
