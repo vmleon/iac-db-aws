@@ -1,4 +1,4 @@
-# Oracle Database @ AWS - Phase 2 Infrastructure
+# Oracle Database @ AWS - Infrastructure
 #
 # POC Notes:
 # - Uses local state. Production: Use S3 backend with DynamoDB locking
