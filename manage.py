@@ -227,6 +227,71 @@ def cmd_clean():
         print("Delete manually if no longer needed.")
 
 
+def cmd_token():
+    """Update AWS credentials in .env and terraform.tfvars"""
+    env_path = ROOT_DIR / ".env"
+    tfvars_path = TERRAFORM_DIR / "terraform.tfvars"
+
+    if not env_path.exists():
+        print("Error: .env not found. Run 'python manage.py setup' first.")
+        sys.exit(1)
+
+    if not tfvars_path.exists():
+        print("Error: terraform.tfvars not found. Run 'python manage.py tf' first.")
+        sys.exit(1)
+
+    print("--- Update AWS Credentials ---")
+    aws_access_key_id = prompt("AWS_ACCESS_KEY_ID")
+    aws_secret_access_key = prompt("AWS_SECRET_ACCESS_KEY", secret=True)
+    aws_session_token = prompt("AWS_SESSION_TOKEN", secret=True)
+
+    # Update .env file
+    env_content = env_path.read_text()
+    env_content = re.sub(
+        r"^AWS_ACCESS_KEY_ID=.*$",
+        f"AWS_ACCESS_KEY_ID={aws_access_key_id}",
+        env_content,
+        flags=re.MULTILINE,
+    )
+    env_content = re.sub(
+        r"^AWS_SECRET_ACCESS_KEY=.*$",
+        f"AWS_SECRET_ACCESS_KEY={aws_secret_access_key}",
+        env_content,
+        flags=re.MULTILINE,
+    )
+    env_content = re.sub(
+        r"^AWS_SESSION_TOKEN=.*$",
+        f"AWS_SESSION_TOKEN={aws_session_token}",
+        env_content,
+        flags=re.MULTILINE,
+    )
+    env_path.write_text(env_content)
+    print(f"Updated: {env_path}")
+
+    # Update terraform.tfvars file
+    tfvars_content = tfvars_path.read_text()
+    tfvars_content = re.sub(
+        r'^aws_access_key_id\s*=\s*".*"$',
+        f'aws_access_key_id     = "{aws_access_key_id}"',
+        tfvars_content,
+        flags=re.MULTILINE,
+    )
+    tfvars_content = re.sub(
+        r'^aws_secret_access_key\s*=\s*".*"$',
+        f'aws_secret_access_key = "{aws_secret_access_key}"',
+        tfvars_content,
+        flags=re.MULTILINE,
+    )
+    tfvars_content = re.sub(
+        r'^aws_session_token\s*=\s*".*"$',
+        f'aws_session_token     = "{aws_session_token}"',
+        tfvars_content,
+        flags=re.MULTILINE,
+    )
+    tfvars_path.write_text(tfvars_content)
+    print(f"Updated: {tfvars_path}")
+
+
 def prompt(name: str, default: str = None, secret: bool = False) -> str:
     """Prompt user for input"""
     if default:
@@ -249,6 +314,7 @@ def main():
         print("\nCommands:")
         print("  setup  - Create .env from template (interactive)")
         print("  tf     - Generate terraform.tfvars from .env")
+        print("  token  - Update AWS credentials in .env and terraform.tfvars")
         print("  clean  - Remove generated files (requires terraform destroy first)")
         sys.exit(1)
 
@@ -258,6 +324,8 @@ def main():
         cmd_setup()
     elif command == "tf":
         cmd_tf()
+    elif command == "token":
+        cmd_token()
     elif command == "clean":
         cmd_clean()
     else:

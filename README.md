@@ -76,6 +76,8 @@ python manage.py setup
 python manage.py tf
 ```
 
+> **Note:** If your AWS session token expires, run `python manage.py token` to update credentials in both `.env` and `terraform.tfvars` without re-running the full setup.
+
 ```bash
 # Deploy infrastructure
 cd terraform
