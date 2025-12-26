@@ -90,7 +90,7 @@ output "sample_vpc" {
   description = "Sample VPC details for application deployment"
   value = {
     vpc_id        = module.odb_common.vpc_id
-    vpc_cidr      = module.odb_common.vpc_cidr
+    vpc_cidr      = module.odb_common.vpc_cidr_block
     app_subnet_id = module.odb_common.app_subnet_id
   }
 }

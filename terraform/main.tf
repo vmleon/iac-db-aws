@@ -12,7 +12,7 @@ resource "random_id" "deploy_id" {
 
 locals {
   name_suffix = random_id.deploy_id.hex
-  name_prefix = "${var.project_prefix}-"
+  name_prefix = var.project_prefix
 }
 
 # Sanity check: Verify AWS credentials work
@@ -23,7 +23,7 @@ data "aws_caller_identity" "current" {}
 # =============================================================================
 
 module "odb_common" {
-  source = "./modules/odb-common"
+  source = "github.com/vmleon/oracle-database-aws-exadata-infrastructure"
 
   name_prefix        = local.name_prefix
   name_suffix        = local.name_suffix
@@ -31,11 +31,15 @@ module "odb_common" {
   availability_zone  = var.availability_zone
   client_subnet_cidr = var.client_subnet_cidr
   backup_subnet_cidr = var.backup_subnet_cidr
-  vpc_cidr           = var.vpc_cidr
   exadata_shape      = var.exadata_shape
   compute_count      = var.compute_count
   storage_count      = var.storage_count
   contact_email      = var.contact_email
+
+  # Enable VPC and peering (matches current local module behavior)
+  create_vpc     = true
+  vpc_cidr       = var.vpc_cidr
+  create_peering = true
 
   tags = var.tags
 }

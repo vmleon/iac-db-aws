@@ -28,11 +28,15 @@ This project provisions Oracle Database @ AWS infrastructure following patterns 
 ### Module Architecture
 
 ```
-terraform/modules/
-├── odb-common/       # ODB Network, Exadata Infra, Peering, Sample VPC
-├── odb-vm-cluster/   # Exadata VM Cluster (optional)
-└── odb-autonomous/   # Autonomous VM Cluster (optional)
+terraform/
+├── main.tf           # Root module (uses remote exadata-infrastructure module)
+├── modules/
+│   ├── odb-vm-cluster/   # Exadata VM Cluster (optional)
+│   └── odb-autonomous/   # Autonomous VM Cluster (optional)
 ```
+
+The common infrastructure (ODB Network, Exadata Infrastructure, Peering, Sample VPC) is provided by
+the remote module: [oracle-database-aws-exadata-infrastructure](https://github.com/vmleon/oracle-database-aws-exadata-infrastructure)
 
 ## Requirements
 
@@ -177,7 +181,9 @@ This is a Proof of Concept. When moving to production, address these items:
 ├── .env.j2                  # Environment template
 ├── .env                     # Generated (gitignored)
 ├── terraform/
-│   ├── modules/             # Reusable modules
+│   ├── modules/
+│   │   ├── odb-vm-cluster/  # VM Cluster module
+│   │   └── odb-autonomous/  # Autonomous module
 │   ├── main.tf              # Root module
 │   ├── vars.tf              # Variables
 │   ├── output.tf            # Outputs
@@ -191,6 +197,7 @@ This is a Proof of Concept. When moving to production, address these items:
 ## References
 
 - [Oracle Database @ AWS Documentation](https://docs.aws.amazon.com/odb/)
+- [Exadata Infrastructure Module](https://github.com/vmleon/oracle-database-aws-exadata-infrastructure)
 - [OCI Multicloud Landing Zone for AWS](https://github.com/oci-landing-zones/terraform-oci-multicloud-aws)
 - [Terraform AWS Provider - ODB Resources](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 - [Oracle Terraform Examples](https://docs.oracle.com/en-us/iaas/Content/database-at-aws-exadata-awscs/awscs-code-samples-terraform.html)
